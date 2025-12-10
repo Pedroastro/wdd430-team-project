@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { getAllProducts } from "@/app/actions/product";
+import { useState, useEffect, Suspense } from "react";
+import { getAllProducts, getCategories } from "@/app/actions/product";
 import ProductCard from "@/components/ProductCard";
 import Link from "next/link";
 import Search from "@/components/Search";
+import FilterPanel from "@/components/FilterPanel";
 import { useSearchParams } from "next/navigation";
 
 interface Product {
@@ -17,33 +18,37 @@ interface Product {
   numReviews: number;
 }
 
-export default function HomePage() {
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+function HomePageContent() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
   const searchParams = useSearchParams();
 
-  // 1️⃣ Read query from URL
-  const query = searchParams.get("query")?.toLowerCase() || "";
+  const query = searchParams.get("query") || "";
+  const category = searchParams.get("category") || "";
+  const minPrice = searchParams.get("minPrice") || "";
+  const maxPrice = searchParams.get("maxPrice") || "";
 
   useEffect(() => {
-    async function fetchProducts() {
-      const allProducts = await getAllProducts();
+    async function fetchData() {
+      setLoading(true);
 
-      // 2️⃣ No search? → Show all
-      if (!query) {
-        setFilteredProducts(allProducts);
-        return;
-      }
+      const categoriesData = await getCategories();
+      setCategories(categoriesData);
 
-      // 3️⃣ Filter by query
-      setFilteredProducts(
-        allProducts.filter((product) =>
-          product.name.toLowerCase().includes(query)
-        )
-      );
+      const productsData = await getAllProducts({
+        query: query || undefined,
+        category: category || undefined,
+        minPrice: minPrice ? Number(minPrice) : undefined,
+        maxPrice: maxPrice ? Number(maxPrice) : undefined,
+      });
+
+      setProducts(productsData);
+      setLoading(false);
     }
 
-    fetchProducts();
-  }, [query]); // runs every time the URL query changes
+    fetchData();
+  }, [query, category, minPrice, maxPrice]);
 
   return (
     <div>
@@ -51,19 +56,25 @@ export default function HomePage() {
         <h1>Welcome to Handcrafted Haven</h1>
         <p>Your digital marketplace for handmade crafts.</p>
 
-        <div style={{ marginBottom: "2rem" }}>
+        <div style={{ marginBottom: "4rem" }}>
           <Link href="/signup">Sign Up</Link>{" "}
           <Link href="/login">Login</Link>
         </div>
 
-        {/* 4️⃣ Search bar — NO onSearch needed */}
+        {/* Search bar */}
         <div style={{ marginBottom: "1rem" }}>
           <Search placeholder="Search products..." />
         </div>
 
+        {/* Filter panel */}
+        <FilterPanel categories={categories} />
+
+        {/* Product grid */}
         <section className="product-grid">
-          {filteredProducts.length > 0 ? (
-            filteredProducts.map((product) => (
+          {loading ? (
+            <p>Loading products...</p>
+          ) : products.length > 0 ? (
+            products.map((product) => (
               <ProductCard
                 key={product._id}
                 id={product._id}
@@ -81,5 +92,13 @@ export default function HomePage() {
         </section>
       </main>
     </div>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <HomePageContent />
+    </Suspense>
   );
 }

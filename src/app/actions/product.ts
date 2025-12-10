@@ -100,20 +100,41 @@ export async function getProductById(id: string) {
     }
 }
 
+export interface ProductFilterOptions {
+    query?: string;
+    category?: string;
+    minPrice?: number;
+    maxPrice?: number;
+}
 
-export async function getAllProducts(query?: string) {
+export async function getAllProducts(options: ProductFilterOptions = {}) {
     try {
         await dbConnect();
 
-        // If query exists, filter products by name or description (case-insensitive)
-        const filter = query
-            ? {
-                  $or: [
-                      { name: { $regex: query, $options: "i" } },
-                      { description: { $regex: query, $options: "i" } },
-                  ],
-              }
-            : {};
+        const { query, category, minPrice, maxPrice } = options;
+        const filters: any[] = [];
+
+        if (query) {
+            filters.push({
+                $or: [
+                    { name: { $regex: query, $options: "i" } },
+                    { description: { $regex: query, $options: "i" } },
+                ],
+            });
+        }
+
+        if (category) {
+            filters.push({ category: { $regex: `^${category}$`, $options: "i" } });
+        }
+
+        if (minPrice !== undefined && minPrice > 0) {
+            filters.push({ price: { $gte: minPrice } });
+        }
+        if (maxPrice !== undefined && maxPrice > 0) {
+            filters.push({ price: { $lte: maxPrice } });
+        }
+
+        const filter = filters.length > 0 ? { $and: filters } : {};
 
         const products = await Product.find(filter).sort({ createdAt: -1 }).lean();
 
@@ -130,6 +151,18 @@ export async function getAllProducts(query?: string) {
         }));
     } catch (error) {
         console.error("Error fetching all products:", error);
+        return [];
+    }
+}
+
+
+export async function getCategories(): Promise<string[]> {
+    try {
+        await dbConnect();
+        const categories = await Product.distinct("category");
+        return categories.filter((cat): cat is string => typeof cat === "string" && cat.trim() !== "");
+    } catch (error) {
+        console.error("Error fetching categories:", error);
         return [];
     }
 }
