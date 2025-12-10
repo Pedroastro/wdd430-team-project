@@ -8,15 +8,18 @@ export default function NotFound() {
             <p style={{ marginBottom: '2rem', color: '#666' }}>
                 The page or product you are looking for could not be found.
             </p>
-            <Link href="/seller" style={{
+            <Link href="/" style={{
                 display: 'inline-block',
-                padding: '0.75rem 1.5rem',
-                backgroundColor: '#0070f3',
-                color: 'white',
+                padding: '0.6rem 1.2rem',
+                backgroundColor: 'var(--primary)',
+                color: '#fff',
                 textDecoration: 'none',
-                borderRadius: '4px'
+                borderRadius: '5px',
+                fontWeight: 'bold',
+                fontSize: '1rem',
+                transition: 'background 0.3s ease'
             }}>
-                Return to Seller Profile
+                Return to Home
             </Link>
         </div>
     );

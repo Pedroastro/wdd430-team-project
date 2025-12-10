@@ -4,8 +4,24 @@ import ProductForm from "../../../components/ProductForm";
 import Link from "next/link";
 import ReviewForm from "../../../components/ReviewForm";
 import { auth } from "@/auth";
+import type { Metadata } from "next";
 
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+    const { id } = await params;
+    const product = await getProductById(id);
 
+    if (!product) {
+        return {
+            title: "Product Not Found",
+            description: "The requested product could not be found. This project is part of an assignment for BYU Idaho's WDD430 class.",
+        };
+    }
+
+    return {
+        title: product.name,
+        description: `${product.description?.substring(0, 150) || product.name} - Available on Artisan Marketplace. This project is part of an assignment for BYU Idaho's WDD430 class.`,
+    };
+}
 
 export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
@@ -30,7 +46,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     }
 
     return (
-        <div style={{ maxWidth: "800px", margin: "2rem auto", padding: "0 1rem" }}>
+        <main style={{ maxWidth: "800px", margin: "2rem auto", padding: "0 1rem", textAlign: "left" }}>
             <Link href={isOwner ? "/seller" : `/seller/${product.profileId}`} style={{ display: "inline-block", marginBottom: "1rem" }}>
                 &larr; {isOwner ? "Back to Profile" : "To Seller's Profile"}
             </Link>
@@ -125,6 +141,6 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                     currentUser={session?.user && session.user.id ? { id: session.user.id, name: session.user.name } : undefined}
                 />
             </div>
-        </div>
+        </main>
     );
 }

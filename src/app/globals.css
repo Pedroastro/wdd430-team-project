@@ -41,6 +41,19 @@ a {
   text-decoration: none;
 }
 
+/* Screen reader only */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* ===== Navigation Styles ===== */
 nav {
   background: var(--nav-bg);
@@ -189,7 +202,8 @@ textarea {
     gap: 0.5rem;
   }
 
-  nav a {
+  nav a,
+  .logout-button {
     padding: 0.4rem 0.8rem;
     font-size: 0.9rem;
   }

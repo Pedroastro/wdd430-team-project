@@ -70,7 +70,8 @@ function HomePageContent() {
         <FilterPanel categories={categories} />
 
         {/* Product grid */}
-        <section className="product-grid">
+        <section className="product-grid" aria-labelledby="products-heading">
+          <h2 id="products-heading" className="sr-only">Products</h2>
           {loading ? (
             <p>Loading products...</p>
           ) : products.length > 0 ? (
